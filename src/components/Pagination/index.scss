@@ -1,0 +1,36 @@
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .disabled {
+    color: #595959 !important;
+  }
+  .page-item {
+    color: #0168bf;
+    font-weight: bold;
+  }
+  .page-item,
+  .page-link {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+    border-radius: 3px;
+    font-size: 15px;
+  }
+  .page-item {
+    [aria-hidden="true"] {
+      font-size: 20px;
+    }
+    &:first-child,
+    &:last-child {
+      margin: 0 10px;
+    }
+  }
+  .active {
+    background-color: #0168bf !important;
+    border-radius: 3px;
+    .page-link {
+      color: #fff;
+    }
+  }
+}

@@ -1,0 +1,24 @@
+
+
+// Import font file
+@font-face {
+    font-family: 'MavenPro';
+    src: url('./fonts/static/MavenPro-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+  
+//   @font-face {
+//     font-family: 'MavenPro';
+//     src: url('./fonts/static/MavenPro-Bold.ttf') format('truetype');
+//     font-weight: bold;
+//     font-style: normal;
+//   }
+$primary-color:"#fff";
+$blue-color:"#0168BF";
+$th-color:"#ACACAC";
+$thead-color:"#FAFAFA";
+$error:"#FF0000";
+$success:"#19DA71";
+$text-color:"#838383"
+ 

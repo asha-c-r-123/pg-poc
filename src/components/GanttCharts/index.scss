@@ -1,0 +1,219 @@
+.task-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+  position: relative;
+  .ViewContainer {
+    display: flex;
+  }
+  .dropdown-menu {
+    height: 150px;
+    overflow: auto;
+  }
+}
+
+#task-modal {
+  width: 480px;
+  top: 0%;
+  background: #ffffff;
+  box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.25),
+    10px 10px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  .modal-footer {
+    border-top: 0 !important;
+  }
+  .modal-header {
+    margin: 8px 0px 0;
+    .modal-title {
+      font-weight: 500;
+      font-size: 22px;
+      line-height: 96.02%;
+      text-align: center;
+      color: #ff0000;
+    }
+    .modal-body {
+      p {
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+#add-task {
+  font-size: 14px;
+  padding: 0;
+  height: 32px;
+  width: 140px;
+  margin: 0 5px 5px;
+  background-color: #0168bf;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.task-details-actions {
+  display: flex;
+  margin: 10px 0;
+  justify-content: space-evenly;
+  align-items: center;
+  font-size: 14px;
+  p {
+    margin: 0;
+  }
+  div:first-child {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  h4 {
+    font-size: 26px;
+    line-height: 1;
+    color: #0168bf;
+    font-weight: bold;
+    margin: 0;
+  }
+  span {
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 14px;
+    color: #595959;
+  }
+}
+.no-tasks {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: red;
+  margin-top: 10%;
+}
+#ganttChart {
+  background-color: #ffffff;
+  height: 90%;
+  ._3eULf {
+    border: 0;
+    display: flex;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    outline: none;
+    position: relative;
+  }
+  ._3_ygE {
+    border: 0;
+  }
+  ._35nLX {
+    stroke-width: 0 !important;
+  }
+  ._1nBOt,
+  ._2eZzQ,
+  ._2TfEi,
+  ._WuQ0f {
+    visibility: hidden;
+  }
+  ._WuQ0f:nth-child(1),
+  ._WuQ0f:nth-child(2),
+  ._WuQ0f:nth-child(3),
+  ._2eZzQ {
+    display: none;
+  }
+  ._34SS0 {
+    position: relative;
+    height: 50px !important;
+    padding-bottom: 10px !important;
+    background-color: #ffffff !important;
+    &:nth-child(even) {
+      ._nI1Xw {
+        color: #3fb4e8;
+      }
+    }
+    ._3lLk3 {
+      display: flex;
+      text-align: left;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 10px 10px 0;
+    }
+  }
+
+  ._nI1Xw {
+    font-weight: 500;
+    font-size: 16px !important;
+    line-height: 96.02%;
+    color: #0168bf;
+  }
+  ._nI1Xw,
+  ._3lLk3:nth-child(2),
+  ._3lLk3:nth-child(3) {
+    position: absolute;
+    font-size: 10px;
+    left: 0;
+    padding: 10px 10px 0;
+  }
+  ._3lLk3:nth-child(1) {
+    bottom: 30px;
+    margin: 0 0 5px;
+  }
+  ._3lLk3:nth-child(2) {
+    bottom: 10px;
+    left: 15px;
+  }
+  ._3lLk3:nth-child(3) {
+    bottom: 0px;
+    left: 15px;
+  }
+  ._31ERP {
+    fill: #ffd5d5 !important;
+  }
+}
+
+// ._34SS0 {
+//   cursor: pointer;
+//   ._3lLk3:first-child::before {
+//     background-repeat: no-repeat;
+//     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5' fill='none'%3E%3Cpath d='M7.05531 1.16992L4.74615 3.47909C4.47344 3.7518 4.02719 3.7518 3.75448 3.47909L1.44531 1.16992' stroke='%23ACACAC' stroke-miterlimit='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+//     content: "";
+//     height: 10px;
+//     width: 10px;
+//     display: inline-block;
+//     position: absolute;
+//     right: 20%;
+//     opacity: 1;
+//   }
+// }
+// .closed {
+//   ._3lLk3:first-child::before {
+//     transform: rotate(180deg);
+//     margin-top: -10px !important;
+//     top: 40%;
+//   }
+// }
+// .open {
+//   ._3lLk3:first-child::before {
+//     transform: rotate(0);
+//     margin-top: -10px !important;
+//     top: 45%;
+//   }
+// }
+// .ticks {
+//   display: none;
+// }
+// ._2dZTy:nth-child(even) {
+//   fill: #fff !important;
+// }
+// ._3rUKi {
+//   stroke: #acacac !important;
+// }
+// ._3ZbQT {
+//   border-right: 0.5px solid #acacac;
+//   border-bottom: 0px !important;
+// }
+
+.today rect[fill] {
+  fill: transparent !important;
+}

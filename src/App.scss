@@ -1,0 +1,134 @@
+@import "styles.scss";
+* {
+  margin: 0;
+  padding: 0;
+}
+body {
+  border-radius: 10px;
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+  font-size: 12px;
+  overflow: hidden;
+}
+body,
+html {
+  font-family: "MavenPro";
+  background-color: $primary-color;
+  height: 100%;
+  width: 100%;
+}
+html,
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+div,
+span {
+  font-family: "MavenPro" !important;
+}
+#root {
+  height: 100%;
+  width: 100%;
+}
+.modal {
+  form {
+    margin-bottom: 38px;
+    .action-buttons {
+      display: flex;
+      flex-direction: row-reverse;
+    }
+  }
+  button {
+    width: 102px;
+    margin: 0 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 32px;
+    text-align: center;
+    background-color: #0168bf;
+    border: 1px solid #0168bf;
+    &:hover {
+      background-color: #0168bf;
+    }
+  }
+  .cancel {
+    color: #0168bf;
+    background-color: #fff;
+    font-weight: 900;
+  }
+  .btn-close {
+    background-color: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+}
+.sort-table {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+.sort-table .dropdown-toggle,
+.filter-table {
+  background: #fff !important;
+  border: 0.5px solid #acacac !important;
+  border-radius: 6px !important;
+  color: #595959 !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  font-size: 12px !important;
+  height: 30px !important;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  img {
+    width: 10px;
+  }
+}
+
+#searchHeader {
+  .dropdown-item {
+    cursor: pointer !important;
+  }
+  .dropdown-toggle::after {
+    background-repeat: no-repeat;
+    position: relative;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5' fill='none'%3E%3Cpath d='M7.05531 1.16992L4.74615 3.47909C4.47344 3.7518 4.02719 3.7518 3.75448 3.47909L1.44531 1.16992' stroke='%23ACACAC' stroke-miterlimit='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+    content: "";
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    width: 10px;
+    border: 0 !important;
+    margin-top: 12px;
+    margin-left: 10px;
+    display: inline-block;
+    position: relative;
+  }
+  .show::after {
+    transform: rotate(180deg);
+    margin-top: -10px !important;
+  }
+}
+.search-header {
+  display: flex;
+  flex-direction: row;
+  column-gap: 1.5em;
+  align-items: center;
+  justify-content: center;
+  #add-project {
+    font-size: 14px;
+    padding: 0;
+    height: 30px;
+    width: 156px;
+    margin: 0 5px 5px;
+    background-color: #0168bf;
+    border: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+  }
+}

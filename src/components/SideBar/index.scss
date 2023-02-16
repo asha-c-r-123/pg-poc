@@ -1,0 +1,101 @@
+.flexbox {
+  display: flex;
+  overflow: hidden;
+  height: 100%;
+  margin-top: 5%;
+}
+.flexbox .flexbox-col {
+  height: 100%;
+  flex: 1;
+}
+.sidebar {
+  width: 300px;
+  height: 100%;
+  position: relative;
+  z-index: 10;
+  background: #fff;
+  .active {
+    background: rgba(1, 104, 191, 0.05);
+    border-radius: 10px 0px 0px 10px;
+    span::after {
+      content: "";
+      width: 20px;
+      height: 20px;
+      background-color: #0168bf;
+      border-radius: 50%;
+      position: absolute;
+      top: 25%;
+      right: -12%;
+      z-index: 10;
+    }
+  }
+}
+.logout {
+  list-style: none;
+  padding: 10px 30px;
+  margin: 10px 0 0;
+  border-top: 1px solid #000;
+
+  li {
+    padding: 10px 10px 10px;
+    margin: 10px 0;
+
+    #add-project {
+      font-size: 14px;
+      padding: 0;
+      height: 42px;
+      width: 156px;
+      margin: 0 5px 5px;
+      background-color: #0168bf;
+      border: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+    }
+    a {
+      color: #ff0000;
+      font-size: 17px;
+      text-decoration: none;
+      img {
+        margin-right: 30px;
+      }
+    }
+  }
+}
+/* .sidebar.closed {
+    width: 80px;
+  } */
+.pg-logo {
+  display: flex;
+  width: auto;
+  justify-content: center;
+  padding: 40px;
+  img {
+    width: 70px;
+  }
+}
+.nav-item {
+  margin: 5px 0;
+}
+.nav-link {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 18px;
+  text-align: left;
+  color: #acacac;
+  margin: 10px 0 0 20px;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  padding: 10px 17px;
+  img {
+    width: 28px;
+    height: 28px;
+  }
+  span {
+    padding-left: 28px;
+    position: relative;
+    display: block;
+    width: 100%;
+  }
+}
