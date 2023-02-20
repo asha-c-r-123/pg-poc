@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import Form from "react-bootstrap/Form";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { submitProject, editUser } from "../../../store/actions/UserActions";
+import { sendFiles, editFiles } from "../../../store/actions/FileActions";
 import { UploadFileToServer } from "../../../store/actions/ProofScopeActions";
+import { uploadFileAzure } from "../../../store/actions/AzureFileActions";
+import { formatAddProjectDate } from "../../../helper";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
 import "./index.scss";
-import UploadFile from "../../FileUpload";
 
 function AddProject({
   showPopModal,
@@ -18,20 +20,28 @@ function AddProject({
 }) {
   const dispatch = useDispatch();
   const [name, setName] = useState("");
-  const [count, setCount] = useState("");
+  const [count, setCount] = useState(0);
+  const [printer, setArtworkPrinter] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [sosDate, setSOSDate] = useState("");
   const [uploadFile, setUploadFile] = useState("");
   const [owner, setOwner] = useState("");
   const [aprrovalStatus, setApprovalStatus] = useState("");
+  const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [files, setFiles] = useState([]);
   const [initialFiles, setInitialFiles] = useState([]);
   const [isRequired, setIsRequired] = useState(true);
   // const connectionString = "Your connection string here";
   // const containerName = "your-container-name";
-  const [uploadedFileUrl, setUploadedFileUrl] = useState(null);
+  const [recordId, setRecordId] = useState();
+
+  useEffect(() => {
+    if (!recordId) {
+      setRecordId(Math.floor(Math.random() * 9000) + 1000);
+    }
+  }, [recordId]);
 
   useEffect(() => {
     setInitialFiles(files);
@@ -40,7 +50,7 @@ function AddProject({
     } else {
       setIsRequired(true);
     }
-  }, [files]);
+  }, [files, setInitialFiles, setIsRequired]);
 
   const projectName = (event) => {
     setName(event.target.value);
@@ -48,34 +58,44 @@ function AddProject({
   const projectCount = (event) => {
     setCount(event.target.value);
   };
+  const projectPrinter = (event) => {
+    setArtworkPrinter(event.target.value);
+  };
 
   const projectStartDate = (event) => {
     const start = new Date(event.target.value);
-    if (endDate !== "" && start > endDate) {
-      alert("Start date should not be greater than end date");
+    const dateString = start.toISOString().slice(0, 10);
+
+    if (endDate === "" || start <= new Date(endDate)) {
+      setStartDate(dateString);
     } else {
-      setStartDate(start);
+      alert("Start date should be less than or equal to end date");
     }
   };
 
   const projectEndDate = (event) => {
     const end = new Date(event.target.value);
-    if (startDate !== "" && end < startDate) {
+    const dateString = end.toISOString().slice(0, 10);
+
+    if (startDate !== "" && new Date(startDate) > end) {
       alert("End date should not be less than start date");
+    } else if (sosDate !== "" && new Date(sosDate) < end) {
+      alert("End date should not be greater than SOS date");
     } else {
-      setEndDate(end);
+      setEndDate(dateString);
     }
   };
   const projectSOSDate = (event) => {
     const sos = new Date(event.target.value);
-    if (endDate !== "" && endDate > sos) {
-      alert("End date should not be less than sos date");
+    const dateString = sos.toISOString().slice(0, 10);
+
+    if (endDate !== "" && new Date(endDate) > sos) {
+      alert("SOS date should not be less than end date");
     } else {
-      setSOSDate(sos);
+      setSOSDate(dateString);
     }
   };
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
   const projectUploadFile = (event) => {
     const files = Array.from(event.target.files);
 
@@ -87,8 +107,7 @@ function AddProject({
     }
 
     const mappedFiles = filteredFiles.map((file) => ({
-      name: file.name,
-      // data: file,
+      Name: file.name,
       size: file.size,
       timestamp: new Date().toISOString(),
     }));
@@ -96,66 +115,73 @@ function AddProject({
     setFiles(mappedFiles);
   };
 
-  const projectStatus = (event) => {
+  const projectApprovedStatus = (event) => {
     setApprovalStatus(event.target.value);
+  };
+  const projectStatus = (event) => {
+    setStatus(event.target.value);
   };
   const projectOwner = (event) => {
     setOwner(event.target.value);
   };
-  const handleUpload = (fileUrl) => {
-    setUploadedFileUrl(fileUrl);
-  };
-  const validateStartEndDates = () => {
-    if (startDate !== null && endDate !== null && startDate > endDate) {
-      return "Start date should not be greater than end date";
-    }
-    return true;
-  };
-  const validateSosEndDates = () => {
-    if (sosDate !== null && endDate !== null && endDate > sosDate) {
-      return "End date should not be greater than sos date";
-    }
-    return true;
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const validationSE = validateStartEndDates();
-    if (validationSE !== true) {
-      alert(validationSE);
-      return;
-    }
-    const validationES = validateSosEndDates();
-    if (validationES !== true) {
-      alert(validationES);
-      return;
-    }
-    const fileName = files[0].name;
-    console.log(fileName);
+    const fileName = files[0].Name;
+    const now = new Date();
+    const date = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}`;
+    let hours = now.getHours();
+    const amOrPm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const time = `${hours}:${minutes} ${amOrPm}`;
+    const currentDateTime = `${date} ${time}`;
     const updateData = {
-      name: name,
-      count: count,
-      startDate: startDate,
-      endDate: endDate,
-      sosDate: sosDate,
-      // filename: files && files.length > 0 ? files : [],
-      filename: files,
-      status: aprrovalStatus,
-      owener: owner,
-      timestamp: Date.now(),
-      tasks: [],
+      Status: status,
+      ProjectName: name,
+      Approved: aprrovalStatus,
+      Timestamp: currentDateTime,
+      ProjectEndDate: endDate,
+      ProjectStartDate: startDate,
+      ArtworkCount: count,
+      UpdateTime: currentDateTime,
+      EstimatedSOS: sosDate,
+      EstimatedAWPrinter: printer,
+      RecordID: recordId,
+      PM: owner,
     };
-    const filePath = "cloudflow://PP_FILE_STORE/aacdata/" + fileName[0].name;
 
+    const filePath = "cloudflow://PP_FILE_STORE/aacdata/" + fileName[0].Name;
+    const filesInfo = {
+      Filename: files[0].Name,
+      RecordID: recordId?.toString(),
+      Owner: owner,
+      Size: files[0].size,
+      Filepath: "",
+      Timestamp: currentDateTime,
+    };
     if (isAdd) {
       // await dispatch(UploadFileToServer(fileNamesAndPaths[0].name, filePath));
       dispatch(submitProject(updateData));
+      // dispatch(uploadFileAzure(files));
+      dispatch(
+        sendFiles({
+          Filename: files[0].Name,
+          RecordID: recordId?.toString(),
+          Owner: owner,
+          Size: files[0].size,
+          Filepath: "",
+          Timestamp: currentDateTime,
+        })
+      );
     } else {
       setSelected([updateData]);
       // await dispatch(
       //   UploadFileToServer(fileNamesAndPaths[0], "C:/Users/ashacr/Downloads/")
       // );
-      dispatch(editUser(selectedProject.id, updateData));
+      dispatch(editUser(updateData));
+      dispatch(editFiles(filesInfo));
+      // dispatch(uploadFileAzure(files));
     }
     //  const sortedProjects = projects.sort(
     //    (a, b) => b.timestamp - a.timestamp
@@ -164,7 +190,7 @@ function AddProject({
     togglePopModal(false);
     //  reset the values of input fields
     setName("");
-    setCount("");
+    setCount(0);
     setStartDate("");
     setEndDate("");
     setSOSDate("");
@@ -172,25 +198,14 @@ function AddProject({
     setUploadFile("");
     setFiles("");
     setApprovalStatus("");
+    setStatus("");
+    setArtworkPrinter("");
   };
-
-  useEffect(() => {
-    if (startDate !== null && endDate !== null && startDate > endDate) {
-      setError("Start date should not be greater than end date");
-    } else {
-      setError("");
-    }
-    if (sosDate !== null && endDate !== null && endDate > sosDate) {
-      setError("end date should not be greater than sos date");
-    } else {
-      setError("");
-    }
-  }, [startDate, endDate, sosDate]);
 
   useEffect(() => {
     if (isAdd) {
       setName("");
-      setCount("");
+      setCount(0);
       setStartDate("");
       setEndDate("");
       setSOSDate("");
@@ -199,17 +214,27 @@ function AddProject({
       setFiles("");
       setApprovalStatus("");
       setSelected([]);
+      setArtworkPrinter("");
       setIsRequired(true);
     } else {
-      setName(selectedProject.name);
-      setCount(selectedProject.count);
-      setStartDate(selectedProject.startDate);
-      setEndDate(selectedProject.endDate);
-      setSOSDate(selectedProject.sosDate);
-      setOwner(selectedProject.owener);
-      setApprovalStatus(selectedProject.status);
-      setFiles(selectedProject.filename);
-      setIsRequired(false);
+      if (selectedProject) {
+        setName(selectedProject.ProjectName);
+        setCount(selectedProject.ArtworkCount);
+        setStartDate(formatAddProjectDate(selectedProject?.ProjectStartDate));
+        setEndDate(formatAddProjectDate(selectedProject?.ProjectEndDate));
+        setSOSDate(formatAddProjectDate(selectedProject?.EstimatedSOS));
+        setArtworkPrinter(
+          formatAddProjectDate(selectedProject?.EstimatedAWPrinter)
+        );
+        setOwner(selectedProject.PM);
+        setApprovalStatus(selectedProject.Approved);
+        setStatus(selectedProject.Status);
+        setRecordId(selectedProject.RecordID);
+        if (selectedProject && selectedProject?.ArtworkFiles) {
+          setFiles(selectedProject?.ArtworkFiles);
+        }
+        setIsRequired(false);
+      }
     }
   }, [selectedProject, isAdd]);
   const handleRemoveFile = (fileIndex) => {
@@ -234,12 +259,11 @@ function AddProject({
           <Form onSubmit={handleSubmit}>
             <div className="group-fileds">
               <Form.Group className="mb-3" controlId="formName">
-                <Form.Label>Name</Form.Label>
-                {/* <UploadFile connectionString={connectionString} containerName={containerName} onUpload={handleUpload} /> */}
+                <Form.Label>Project Name</Form.Label>
                 <Form.Control
                   type="text"
                   name="name"
-                  value={name}
+                  value={name || ""}
                   required
                   onChange={projectName}
                   placeholder="Enter Project Name"
@@ -250,10 +274,20 @@ function AddProject({
                 <Form.Label>Project Manager</Form.Label>
                 <Form.Control
                   type="text"
-                  value={owner}
+                  value={owner || ""}
                   required
                   onChange={projectOwner}
                   placeholder="Enter PM Name"
+                />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formOwner">
+                <Form.Label>Artwork Count</Form.Label>
+                <Form.Control
+                  type="number"
+                  value={count || 0}
+                  required
+                  onChange={projectCount}
+                  placeholder="Enter Count"
                 />
               </Form.Group>
             </div>
@@ -261,11 +295,7 @@ function AddProject({
               <Form.Group className="mb-3" controlId="formCount">
                 <Form.Label>Start Date</Form.Label>
                 <Form.Control
-                  value={
-                    startDate !== null && !isNaN(new Date(startDate))
-                      ? new Date(startDate).toISOString().slice(0, 10)
-                      : ""
-                  }
+                  value={startDate || ""}
                   onChange={projectStartDate}
                   type="date"
                   required
@@ -277,11 +307,7 @@ function AddProject({
               <Form.Group className="mb-3" controlId="formEndDate">
                 <Form.Label>End Date</Form.Label>
                 <Form.Control
-                  value={
-                    endDate !== null && !isNaN(new Date(endDate))
-                      ? new Date(endDate).toISOString().slice(0, 10)
-                      : ""
-                  }
+                  value={endDate || ""}
                   onChange={projectEndDate}
                   type="date"
                   required
@@ -293,14 +319,23 @@ function AddProject({
                 <Form.Control
                   type="date"
                   required
-                  value={
-                    sosDate !== null && !isNaN(new Date(sosDate))
-                      ? new Date(sosDate).toISOString().slice(0, 10)
-                      : ""
-                  }
+                  value={sosDate || ""}
                   onChange={projectSOSDate}
                   placeholder="Enter SOS Date"
                 />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="formEndDate">
+                <Form.Label>Approved</Form.Label>
+                <Form.Select
+                  value={aprrovalStatus || ""}
+                  onChange={projectApprovedStatus}
+                  type="text"
+                  required
+                >
+                  <option value="">Select Status</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </Form.Select>
               </Form.Group>
             </div>
             <div className="group-fileds">
@@ -320,20 +355,19 @@ function AddProject({
                   />
                   {files && files.length > 0 ? (
                     <div className="file-list">
-                      {Array.isArray(files) &&
-                        files?.map((file, index) => (
-                          <div key={index} className="file-item">
-                            <span>{file.name}</span>
-                            <span className="remove-file">
-                              <span
-                                onClick={() => handleRemoveFile(index)}
-                                type="button"
-                                className="btn-close"
-                                aria-label="Close"
-                              ></span>
-                            </span>
-                          </div>
-                        ))}
+                      {files?.map((file, index) => (
+                        <div key={index} className="file-item">
+                          <span>{file.Name}</span>
+                          <span className="remove-file">
+                            <span
+                              onClick={() => handleRemoveFile(index)}
+                              type="button"
+                              className="btn-close"
+                              aria-label="Close"
+                            ></span>
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <>
@@ -355,7 +389,7 @@ function AddProject({
               <Form.Group className="mb-3" controlId="formEndDate">
                 <Form.Label>Status</Form.Label>
                 <Form.Select
-                  value={aprrovalStatus}
+                  value={status || ""}
                   onChange={projectStatus}
                   type="text"
                   placeholder="Enter End Date"
@@ -370,13 +404,9 @@ function AddProject({
               <Form.Group className="mb-3" controlId="formCount">
                 <Form.Label>AW@Printer</Form.Label>
                 <Form.Control
-                  value={
-                    count !== null && !isNaN(new Date(count))
-                      ? new Date(count).toISOString().slice(0, 10)
-                      : ""
-                  }
-                  name="count"
-                  onChange={projectCount}
+                  value={printer || ""}
+                  name="artworkPrinter"
+                  onChange={projectPrinter}
                   type="date"
                   placeholder="Enter Printer date"
                 />

@@ -15,9 +15,18 @@ const initialState = {
 
 export default function taskReducer(state = initialState, action) {
   switch (action.type) {
-    case "FETCH_TASKS":
-      // console.log(action.tasks);
-      return [...action.tasks];
+    case "FETCH_TASK_DETAILS":
+      return {
+        ...state,
+        tasks: action.taskDetails,
+        error: null,
+      };
+    case "FETCH_TASK_DETAILS_ERROR":
+      return {
+        ...state,
+        tasks: [],
+        error: action.error,
+      };
 
     case "ADD_TASK_START":
       return {

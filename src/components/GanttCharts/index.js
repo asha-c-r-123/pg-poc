@@ -31,7 +31,7 @@ function GanttCharts() {
   const [showForm, setShowForm] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const { id } = useParams();
-  const tasks = useSelector((state) => state.projecttasks);
+  const tasksData = useSelector((state) => state.projecttasks);
   const [task, setTask] = useState([]);
   const [taskid, setTaskId] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -41,6 +41,8 @@ function GanttCharts() {
   const [isChecked, setIsChecked] = useState(true);
   const [projectName, setProjectName] = useState([]);
   const [projectId, setProjectId] = useState(id);
+  const [tasksLoaded, setTasksLoaded] = useState(false);
+  const [formattedTasks, setFormattedTasks] = useState([]);
   // useEffect(() => {
   //   window.addEventListener("load", handleLoad);
   //   return () => {
@@ -139,22 +141,41 @@ function GanttCharts() {
   }
   useEffect(() => {
     if (!isLoaded) {
-      // dispatch(getTasks(id));
       dispatch(getTasks(projectId));
       setIsLoaded(true);
     }
-    if (id != undefined) {
-    } else {
-      if (projectName.length) {
-      } else {
-        if (users.length) {
-          dropdownchange(users[0].id, users[0].name, users[0].owener);
-          setProjectId(users[0].id);
-        }
-      }
+  }, [dispatch, isLoaded, projectId]);
+
+  const tasks = useSelector((state) => state?.tasks);
+
+  useEffect(() => {
+    if (!tasks) {
+      // no tasks
+      setFormattedTasks([]);
+    } else if (typeof tasks === "object" && Object.keys(tasks).length > 1) {
+      // multiple tasks
+      const formatted = Object.values(tasks)[0]
+        .map((task) => {
+          const startMonth = parseInt(task?.StartDate?.slice(4, 6));
+          const endMonth = parseInt(task?.EndDate?.slice(4, 6));
+          if (isNaN(startMonth) || isNaN(endMonth) || !task.StartDate) {
+            // Skip tasks with invalid dates
+            return null;
+          }
+          const startDate = new Date(task?.StartDate);
+          const endDate = new Date(task?.EndDate);
+          console.log(startDate, endDate);
+          return {
+            ...task,
+            StartDate: startDate,
+            EndDate: endDate,
+          };
+        })
+        .filter((task) => task !== null);
+      setFormattedTasks(formatted);
+      console.log(formatted);
     }
-    setTask(tasks);
-  }, [dispatch, id, isLoaded, tasks]);
+  }, [tasks]);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -168,7 +189,7 @@ function GanttCharts() {
       console.error("Error: task is undefined or null");
       return;
     }
-    if (!task.start || !task.end) {
+    if (!task.StartDate || !task.EndDate) {
       console.error("Error: task.start or task.end is undefined");
       return;
     }
@@ -267,16 +288,7 @@ function GanttCharts() {
     setTask(tasks.map((t) => (t.id === task.id ? task : t)));
     // console.log("On expander click Id:" + task.id);
   };
-  const formattedTasks =
-    tasks.length > 0
-      ? tasks.map((task) => {
-          return {
-            ...task,
-            StartDate: new Date(task.StartDate),
-            EndDate: new Date(task.EndDate),
-          };
-        })
-      : null;
+
   const onChangeProject = (projectId, prjName, prjOwner) => {
     dispatch(getTasks(projectId));
     setProjectId(projectId);
@@ -290,7 +302,9 @@ function GanttCharts() {
     <div id="ganttChart">
       <div className="task-details-actions">
         <div>
-          <h4>{projectName.length ? projectName[0] : projectDetails.name}</h4>
+          <h4>
+            {projectName.length ? projectName[0] : projectDetails.ProjectName}
+          </h4>
           <span>{projectName[1]}</span>
         </div>
 
@@ -304,12 +318,7 @@ function GanttCharts() {
           />
           <img src={SearchImg} alt="search" id="searchIcon" />
         </div> */}
-        <p>
-          SOS Date -
-          {projectDetails.sosDate !== "" || projectDetails.sosDate !== null
-            ? formatDate(projectDetails.sosDate)
-            : ""}
-        </p>
+        <p>SOS Date -{projectDetails.EstimatedSOS}</p>
         {/* <div className="search-header">
           <Button className="filter-table">
             Filter By <img src={sortImg} alt="sort" />
@@ -321,24 +330,24 @@ function GanttCharts() {
             <Dropdown.Toggle id="dropdown-basic" className="filter-table">
               {projectName.length
                 ? projectName[0]
-                : projectDetails && projectDetails.name
-                ? projectDetails.name
+                : projectDetails && projectDetails.ProjectName
+                ? projectDetails.ProjectName
                 : users.length
-                ? users[0].name
+                ? users[0].ProjectName
                 : "select project"}
 
               {/* <img src={sortImg} alt="sort" /> */}
             </Dropdown.Toggle>
             <Dropdown.Menu>
-              {users.map((user) => (
+              {users.map((user, index) => (
                 <Dropdown.Item
-                  key={user.id}
-                  eventKey={user.name}
+                  key={index}
+                  eventKey={user.ProjectName}
                   onClick={() =>
-                    onChangeProject(user.id, user.name, user.owener)
+                    onChangeProject(user.RecordID, user.ProjectName, user.PM)
                   }
                 >
-                  {user.name}
+                  {user.ProjectName}
                 </Dropdown.Item>
               ))}
             </Dropdown.Menu>
@@ -376,32 +385,81 @@ function GanttCharts() {
           )}
         </div>
       </div>
-      {tasks === undefined ? (
-        <p>Loading...</p>
-      ) : isLoaded && tasks && tasks.length > 0 ? (
-        <>
-          <Gantt
-            tasks={formattedTasks}
-            viewMode={view}
-            taskLabel={(task) => task.owner}
-            onClick={(task) => {
-              updateGant(task);
-            }}
-            onDateChange={handleTaskChange}
-            onProgressChange={handleProgressChange}
-            listCellWidth={isChecked ? "140px" : ""}
-            columnWidth={columnWidth}
-            onSelect={handleSelect}
-            onExpanderClick={handleExpanderClick}
-          />
-        </>
-      ) : (
-        tasksAvailable && (
-          <p className="no-tasks">
-            Tasks are not available, please add new tasks
-          </p>
+      {/* {
+        formattedTasks == null ? (
+          <p>Loading...</p>
+        ) : (
+          // : isLoaded && tasks && tasks.length > 0 ? (
+          <>
+            <Gantt
+              tasks={formattedTasks}
+              viewMode={view}
+              taskLabel={(task) => task.owner}
+              onClick={(task) => {
+                updateGant(task);
+              }}
+              onDateChange={handleTaskChange}
+              onProgressChange={handleProgressChange}
+              listCellWidth={isChecked ? "140px" : ""}
+              columnWidth={columnWidth}
+              onSelect={handleSelect}
+              onExpanderClick={handleExpanderClick}
+            />
+          </>
         )
+
+        //  : (
+        // tasksAvailable && (
+        //   <p className="no-tasks">
+        //     Tasks are not available, please add new tasks
+        //   </p>
+        // )
+        // )
+      } */}
+      {formattedTasks.some(
+        (task) =>
+          task === null ||
+          task.StartDate === undefined ||
+          task.EndDate === undefined
+      ) ? (
+        <div>Invalid task dates</div>
+      ) : formattedTasks.every(
+          (task) =>
+            task !== null &&
+            task.StartDate !== undefined &&
+            task.EndDate !== undefined
+        ) ? (
+        // <Gantt
+        //   tasks={formattedTasks}
+        //   viewMode={view}
+        //   taskLabel={(task) => task.owner}
+        //   onClick={(task) => {
+        //     updateGant(task);
+        //   }}
+        //   onDateChange={handleTaskChange}
+        //   onProgressChange={handleProgressChange}
+        //   listCellWidth={isChecked ? "140px" : ""}
+        //   columnWidth={columnWidth}
+        //   onSelect={handleSelect}
+        //   onExpanderClick={handleExpanderClick}
+        // />
+        <p>gann</p>
+      ) : (
+        <div>Some tasks have invalid dates</div>
       )}
+
+      {/* {formattedTasks &&
+        formattedTasks.length > 0 &&
+        console.log("test", formattedTasks)}
+      {formattedTasks && formattedTasks.length > 0 ? (
+        <div>
+          {formattedTasks[0].map((task) => (
+            <div>{task?.TaskName}</div>
+          ))}
+        </div>
+      ) : (
+        <div>Loading...</div>
+      )} */}
     </div>
   );
 }

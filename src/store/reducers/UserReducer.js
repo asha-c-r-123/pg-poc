@@ -17,6 +17,7 @@ const UserReducers = (state = initialState, action) => {
         loading: true,
       };
     case "FORM_SUBMIT_SUCCESS":
+      console.log(payload);
       return {
         ...state,
         users: [...state.users, payload],
@@ -31,7 +32,9 @@ const UserReducers = (state = initialState, action) => {
     case "DELETE_ITEM_SUCCESS":
       return {
         ...state,
-        users: state.users.filter((item) => item.id !== action.payload.id),
+        users: state.users.filter(
+          (item) => item.RecordID !== action.payload.RecordID
+        ),
       };
     case "DELETE_ALL_ROWS":
       const deletedIds = action.payload;

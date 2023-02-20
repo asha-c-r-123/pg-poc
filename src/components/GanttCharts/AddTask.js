@@ -51,7 +51,7 @@ const AddTask = ({
           // Set an error message or take other action if date is invalid
           return;
         }
-        console.log(newTask.start);
+        // console.log(newTask.start);
 
         if (name === "start" && Date.parse(newTask.end) < dateValue) {
           // Set an error message or take other action if start date is after end date

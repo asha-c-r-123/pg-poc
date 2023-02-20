@@ -3,8 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getUsers,
   deleteRow,
-  deleteAllRows,
+  // deleteAllRows,
 } from "../../../store/actions/UserActions";
+import { deleteFiles } from "../../../store/actions/FileActions";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 import { Dropdown, DropdownButton } from "react-bootstrap";
@@ -23,8 +24,7 @@ import activeFileImg from "../../../images/activefile.svg";
 import "./index.scss";
 import CustomPagination from "../../Pagination";
 import ExportCSV, { ExportSelectedRows } from "../../ExportCSV";
-import { formatDate, downloadFile } from "../../../helper";
-import { OverlayTrigger } from "react-bootstrap";
+import { downloadFile, formatAddProjectDate } from "../../../helper";
 import { TooltipProjectName } from "../../Tooltip";
 import AddButton from "../../AddButton";
 import DeleteModal from "./DeleteModal";
@@ -54,7 +54,7 @@ function DashboardTable() {
 
   // const totalPages = 8;
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 100;
   const totalPages = Math.ceil(users.length / itemsPerPage);
   const handleAdd = () => {
     setIsAdd(true);
@@ -64,11 +64,11 @@ function DashboardTable() {
   const handleClick = (projectId) => {
     history(`/gant/${projectId}`);
   };
-  const handleDelete = async (id) => {
+  const handleDelete = async (id, item) => {
     setDeleteMessage("delete it");
     setSelectedProject(id);
     setShowDeleteModal(true);
-    setSelectedIds(id);
+    setSelectedIds(item);
   };
 
   const handleDeleteAll = () => {
@@ -78,14 +78,21 @@ function DashboardTable() {
   };
   const handleModalDelete = async () => {
     if (Array.isArray(selectedIds)) {
-      await dispatch(deleteAllRows(selectedIds));
+      // await dispatch(deleteAllRows(selectedIds));
     } else {
+      const fileNames = selectedIds?.ArtworkFiles?.map((file) => ({
+        Filename: file.Name,
+      }));
       await dispatch(deleteRow(selectedIds));
+      if (fileNames && fileNames.length > 0) {
+        await dispatch(deleteFiles(fileNames[0]));
+      }
     }
     setSelectedIds(null);
     setShowModal(false);
     const updatedUsers = await dispatch(getUsers());
     if (
+      updatedUsers &&
       currentPage === totalPages &&
       (updatedUsers.length - (selectedIds ? selectedIds.length : 1)) /
         itemsPerPage <
@@ -111,17 +118,23 @@ function DashboardTable() {
         selectedStatus !== ""
           ? selectedStatus === "all"
             ? [...users]
-            : users.filter((user) => user.status === selectedStatus)
+            : users.filter((user) => user.Status === selectedStatus)
           : [...users];
       if (users.length === 0) {
         return;
       }
       filteredUsers = filteredUsers.filter((user) =>
-        Object.values(user).some(
-          (val) =>
-            typeof val === "string" &&
-            val.toLowerCase().includes(search.toLowerCase())
-        )
+        Object.values(user).some((val) => {
+          if (typeof val === "string" || typeof val === "number") {
+            return String(val).toLowerCase().includes(search.toLowerCase());
+          } else if (
+            val instanceof File &&
+            val.name.toLowerCase().includes(search.toLowerCase())
+          ) {
+            return true;
+          }
+          return false;
+        })
       );
 
       if (filteredUsers.length) {
@@ -150,6 +163,7 @@ function DashboardTable() {
     users,
   ]);
   const handleEdit = (project) => {
+    // console.log(project);
     setSelectedProject(project);
     setSelected([project]);
     setIsAdd(false);
@@ -225,53 +239,45 @@ function DashboardTable() {
           </td>
           <td>{item.ArtworkCount}</td>
           <td>
-            {item.ProjectStartDate
-              ? (() => {
-                  const startDate = new Date(item.ProjectStartDate);
-                  if (isNaN(startDate.getTime())) {
-                    return "";
-                  } else {
-                    return formatDate(item.ProjectStartDate);
-                  }
-                })()
-              : ""}
+            <TooltipProjectName
+              name={formatAddProjectDate(item.ProjectStartDate)}
+            />
           </td>
           <td>
-            {item.ProjectEndDate
-              ? (() => {
-                  const endDate = new Date(item.ProjectEndDate);
-                  if (isNaN(endDate.getTime())) {
-                    return "";
-                  } else {
-                    return formatDate(item.ProjectEndDate);
-                  }
-                })()
-              : ""}
+            <TooltipProjectName
+              name={formatAddProjectDate(item.ProjectEndDate)}
+            />
           </td>
           <td>
-            {item.EstimatedSOS
-              ? (() => {
-                  const sosDate = new Date(item.EstimatedSOS);
-                  if (isNaN(sosDate.getTime())) {
-                    return "";
-                  } else {
-                    return formatDate(item.EstimatedSOS);
-                  }
-                })()
-              : ""}
+            <TooltipProjectName
+              name={formatAddProjectDate(item.EstimatedSOS)}
+            />
           </td>
           <td>
-            {item.EstimatedSOS || item.ProjectEndDate
+            {item.ProjectStartDate &&
+            item.ProjectStartDate !== "" &&
+            item.ProjectEndDate &&
+            item.ProjectEndDate !== ""
               ? (() => {
-                  const startDate = new Date(item.ProjectStartDate);
-                  const endDate = new Date(item.ProjectEndDate);
+                  const startDate = new Date(
+                    item.ProjectStartDate.substring(0, 4),
+                    item.ProjectStartDate.substring(4, 6) - 1,
+                    item.ProjectStartDate.substring(6, 8)
+                  );
+                  const endDate = new Date(
+                    (item.EstimatedSOS || item.ProjectEndDate).substring(0, 4),
+                    (item.EstimatedSOS || item.ProjectEndDate).substring(4, 6) -
+                      1,
+                    (item.EstimatedSOS || item.ProjectEndDate).substring(6, 8)
+                  );
                   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
                     return "";
                   } else {
-                    return (
-                      Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) +
-                      1
+                    const diffTime = Math.abs(endDate - startDate);
+                    const diffDays = Math.ceil(
+                      diffTime / (1000 * 60 * 60 * 24)
                     );
+                    return diffDays - 1;
                   }
                 })()
               : ""}
@@ -295,34 +301,21 @@ function DashboardTable() {
             <TooltipProjectName name={item.PM} />
           </td>
           <td>
-            <TooltipProjectName name={item.EstimatedAWPrinter} />
+            <TooltipProjectName
+              name={formatAddProjectDate(item.EstimatedAWPrinter)}
+            />
           </td>
 
-          <td>File Name</td>
-          {/* <td>{item.artworkFiles.map((file) => file.Name)}</td> */}
-          {/* <td>
-            {item.EstimatedAWPrinter !== "" || item.EstimatedAWPrinter !== null
-              ? formatDate(item.EstimatedAWPrinter)
-              : ""}
-          </td> */}
-          {/* <td>
-            <ul>
-              {Array.isArray(item?.filename)
-                ? item?.filename?.map((file, index) => (
-                    <li onClick={() => downloadFile(file)} key={index}>
-                      {file.name}
-                    </li>
-                  ))
-                : item?.filename}
-              {Object.keys(item?.filename).length > 0 && (
-                <img
-                  src={selected?.includes(item) ? activeFileImg : AttchFileImg}
-                  alt="file name"
-                  className="attch-file"
-                />
-              )}
-            </ul>
-          </td> */}
+          <td>
+            <a href="#">
+              {Array.isArray(item.ArtworkFiles)
+                ? item.ArtworkFiles?.map((file) =>
+                    file.RecordID ? file.Name : "file"
+                  ).join(", ")
+                : "no-file"}
+            </a>
+          </td>
+
           <td>
             <div className="actions">
               <img
@@ -346,7 +339,7 @@ function DashboardTable() {
                     : HideDeleteImg
                 }
                 alt="Edit Row"
-                onClick={() => handleDelete(item.id)}
+                onClick={() => handleDelete(item.RecordID, item)}
                 className={`action-icons ${
                   selected.length === 1 && selected?.includes(item)
                     ? "enabled"
@@ -420,13 +413,13 @@ function DashboardTable() {
               <>
                 <span
                   className="dropdown-item"
-                  onClick={() => handleSort("sosDate")}
+                  onClick={() => handleSort("EstimatedSOS")}
                 >
                   SOS Date
                 </span>
                 <span
                   className="dropdown-item"
-                  onClick={() => handleSort("id")}
+                  onClick={() => handleSort("RecordID")}
                 >
                   Project ID
                 </span>
@@ -472,8 +465,8 @@ function DashboardTable() {
               <th>SOS Date</th>
               <th>Duration </th>
               <th>Date Modified </th>
-              <th>Approved </th>
-              <th>Status</th>
+              <th>Status </th>
+              <th>Approved</th>
               <th>PM </th>
               <th>AW@ Printer</th>
               <th>Attachment Name</th>

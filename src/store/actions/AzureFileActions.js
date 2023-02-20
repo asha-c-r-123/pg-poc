@@ -2,13 +2,11 @@ import { BlobServiceClient } from "@azure/storage-blob";
 
 const blobServiceClient = new BlobServiceClient("<your-connection-string>");
 
-export const uploadFile = (file) => async (dispatch) => {
+export const uploadFileAzure = (file) => async (dispatch) => {
   dispatch({ type: "UPLOAD_FILE_PENDING" });
 
   try {
-    const containerClient = blobServiceClient.getContainerClient(
-      "<your-container-name>"
-    );
+    const containerClient = blobServiceClient.getContainerClient("pgsource");
 
     const blobName = file.name;
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);

@@ -24,9 +24,16 @@ export const formatDate = (date) => {
   }); // check the output here
   return formatted;
 };
-
+export const formatAddProjectDate = (dateValue) => {
+  if (dateValue) {
+    const year = dateValue.slice(0, 4);
+    const month = dateValue.slice(4, 6);
+    const day = dateValue.slice(6, 8);
+    return `${year}-${month}-${day}`;
+  }
+  return null;
+};
 export const downloadFile = (file) => {
-  console.log(file);
   const blob = new Blob([file.data], { type: file.data.type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
